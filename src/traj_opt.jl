@@ -63,10 +63,31 @@ function solve_SCP!(TOS::TrajectoryOptimizationSolution, TOP::TrajectoryOptimiza
 	robot = TOP.PD.robot
 	model = TOP.PD.model
 
-	SCPP = SCPProblem(TOP)
-	
+	if isdefined(TOS, :SCPS)
+		SCPS = TOS.SCPS 
+		if isdefined(TOS.SCPS, :SCPP)
+			SCPP = TOS.SCPS.SCPP 
+		else
+			println("ERROR! SCPS defined in TOS but SCPP not defined")
+		end
+	else
+		SCPP = SCPProblem(TOP)
+		SCPS = SCPSolution(SCPP, traj_init)
+	end
+
+	# SCPP = SCPProblem(TOP)
+	if isdefined(SCPP.param, :alg)
+		println("Inside solve_SCP SCPP.param.alg defined")
+	else
+		println("Inside solve_SCP SCPP.param.alg NOT defined")
+	end
 	# Run SCP with initialization trajectory
-	SCPS = SCPSolution(SCPP, traj_init)
+	# SCPS = SCPSolution(SCPP, traj_init)
+	if isdefined(SCPS.param, :alg)
+		println("Inside solve_SCP SCPS.param.alg defined")
+	else
+		println("Inside solve_SCP SCPS.param.alg NOT defined")
+	end
 	TOS.traj, TOS.SCPS = SCPS.traj, SCPS
 	solve_method!(SCPS, SCPP, solver, max_iter, force; kwarg...)
 end

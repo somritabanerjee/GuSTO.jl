@@ -56,7 +56,11 @@ function solve_gusto_jump!(SCPS::SCPSolution, SCPP::SCPProblem, solver="Ipopt", 
 
 	N = SCPP.N
 	param, model = SCPP.param, SCPP.PD.model
-
+	if isdefined(param, :alg)
+		println("param.alg defined")
+	else
+		println("param.alg NOT defined")
+	end
 	!isdefined(param, :alg) ? param.alg = SCPParam_GuSTO(model) : nothing
 	Δ0, ω0, ω_max, ρ0, ρ1 = param.alg.Δ0, param.alg.ω0, param.alg.ω_max, param.alg.ρ0, param.alg.ρ1
 	β_succ, β_fail, γ_fail = param.alg.β_succ, param.alg.β_fail, param.alg.γ_fail
