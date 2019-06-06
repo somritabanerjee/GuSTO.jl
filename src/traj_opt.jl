@@ -22,7 +22,8 @@ function solve_SCPshooting!(TOS::TrajectoryOptimizationSolution, TOP::Trajectory
 
 	# Until shooting method succeeds or maximum SCP iterations is reached
 	ss_sol = nothing
-	while (!SCPS.converged && SCPS.iterations < max_iter)
+	# while (!SCPS.converged && SCPS.iterations < max_iter)
+	while (SCPS.iterations < max_iter)
 		# Attempt shooting method
 		SP = ShootingProblem(TOP, SCPS)
 		ss_sol = solve!(SS, SP)

@@ -20,7 +20,7 @@ function FreeflyerSE2()
 end
 
 function SCPParam(model::FreeflyerSE2, fixed_final_time::Bool)
-  convergence_threshold = 1.0e-2
+  convergence_threshold = 1.0e-6
   SCPParam(fixed_final_time, convergence_threshold)
 end
 
@@ -527,4 +527,84 @@ function f_SE2(X::Vector, U::Vector, rb::Freeflyer)
   xdot[4:5] = 1/rb.mass_ff*F
   xdot[6] = Jzz_inv*M
   return xdot
+end
+
+
+##################
+# Shooting Method
+##################
+function get_dual_jump(SCPC::SCPConstraints, SCPP::SCPProblem{Freeflyer{T}, FreeflyerSE2, E}) where {T,E}
+  init_constraint_category = SCPC.state_init_eq[:sie_init_constraints][1]
+  -JuMP.dual.([init_constraint_category.con_reference[(i,)] for i = init_constraint_category.ind_other[1]])
+end
+
+macro shooting_shortcut_FreeflyerSE2(x, p, u, SP)
+  quote
+    r = $(esc(x))[1:3]
+    v = $(esc(x))[4:6]
+
+    pr = $(esc(p))[1:3]
+    pv = $(esc(p))[4:6]
+
+    F, M = $(esc(u))[1:2], $(esc(u))[3:3]
+
+    robot, model, WS, x_init, goal_set = $(esc(SP)).PD.robot, $(esc(SP)).PD.model, $(esc(SP)).WS, $(esc(SP)).PD.x_init, $(esc(SP)).PD.goal_set
+    r, v, pr, pv, F,M,robot,model,WS, x_init, goal_set
+   
+  end
+end
+
+
+function dynamics_shooting!(xdot, x, p, u, SP::ShootingProblem{Freeflyer{T}, FreeflyerSE2, E}) where {T,E}
+  # r, v, pr, pv, F,M,robot,model,WS, x_init, goal_set = @shooting_shortcut_FreeflyerSE2(x, p, u, SP)
+  r = x[1:3]
+  v = x[4:6]
+  pr = p[1:3]
+  pv = p[4:6]
+
+  F = u[1:2]
+  M = u[3]
+
+  robot = SP.PD.robot 
+  model = SP.PD.model 
+  WS = SP.WS 
+  x_init = SP.PD.x_init
+  goal_set = SP.PD.goal_set 
+
+  J, Jinv, mass = robot.J_ff, robot.J_ff_inv, robot.mass_ff
+
+  # State variables
+  xdot[1:3] += v                            # rdot
+  xdot[4:5] += F/mass                       # vdot
+  xdot[6]   += Jinv*M 
+
+  # Dual variables
+  xdot[7:9] += zeros(3)
+  xdot[10:12] += -pr
+
+end
+
+function shooting_ode!(xdot, x, SP::ShootingProblem{Freeflyer{T}, FreeflyerSE2, E}, t) where {T,E}
+  robot, model = SP.PD.robot, SP.PD.model
+  
+  x, p = x[1:6], x[7:12]
+  u = get_control(x, p, SP)
+  # Add contributions
+  fill!(xdot, 0.)
+  dynamics_shooting!(xdot, x, p, u, SP)
+  # csi_orientation_sign_shooting!(xdot, x, p, u, SP)
+  # csi_translational_velocity_bound_shooting!(xdot, x, p, u, SP)
+  # csi_angular_velocity_bound_shooting!(xdot, x, p, u, SP)
+  # ncsi_obstacle_avoidance_shooting!(xdot, x, p, u, SP)
+  # xdot[14:16] = -obstacle_avoidance_penalty_grad(r, SP)
+end
+
+function get_control(x, p, SP::ShootingProblem{Freeflyer{T}, FreeflyerSE2, E}) where {T,E}
+  robot = SP.PD.robot
+  pv, pω = p[4:5,:], p[6:6,:]
+  
+  F = pv/(2*robot.mass_ff)
+  M = robot.J_ff_inv'*pω/2
+
+  [F; M]
 end
