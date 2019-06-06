@@ -556,20 +556,20 @@ end
 
 
 function dynamics_shooting!(xdot, x, p, u, SP::ShootingProblem{Freeflyer{T}, FreeflyerSE2, E}) where {T,E}
-  # r, v, pr, pv, F,M,robot,model,WS, x_init, goal_set = @shooting_shortcut_FreeflyerSE2(x, p, u, SP)
-  r = x[1:3]
-  v = x[4:6]
-  pr = p[1:3]
-  pv = p[4:6]
+  r, v, pr, pv, F,M,robot,model,WS, x_init, goal_set = @shooting_shortcut_FreeflyerSE2(x, p, u, SP)
+  # r = x[1:3]
+  # v = x[4:6]
+  # pr = p[1:3]
+  # pv = p[4:6]
 
-  F = u[1:2]
-  M = u[3]
+  # F = u[1:2]
+  # M = u[3]
 
-  robot = SP.PD.robot 
-  model = SP.PD.model 
-  WS = SP.WS 
-  x_init = SP.PD.x_init
-  goal_set = SP.PD.goal_set 
+  # robot = SP.PD.robot 
+  # model = SP.PD.model 
+  # WS = SP.WS 
+  # x_init = SP.PD.x_init
+  # goal_set = SP.PD.goal_set 
 
   J, Jinv, mass = robot.J_ff, robot.J_ff_inv, robot.mass_ff
 
