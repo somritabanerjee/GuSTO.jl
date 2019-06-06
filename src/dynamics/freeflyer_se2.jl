@@ -546,7 +546,7 @@ macro shooting_shortcut_FreeflyerSE2(x, p, u, SP)
     pr = $(esc(p))[1:3]
     pv = $(esc(p))[4:6]
 
-    F, M = $(esc(u))[1:2], $(esc(u))[3:3]
+    F, M = $(esc(u))[1:2], $(esc(u))[3]
 
     robot, model, WS, x_init, goal_set = $(esc(SP)).PD.robot, $(esc(SP)).PD.model, $(esc(SP)).WS, $(esc(SP)).PD.x_init, $(esc(SP)).PD.goal_set
     r, v, pr, pv, F,M,robot,model,WS, x_init, goal_set
