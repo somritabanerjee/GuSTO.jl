@@ -222,6 +222,7 @@ function ShootingProblem(TOP::TrajectoryOptimizationProblem, SCPS::SCPSolution)
   for goal in values(inclusive(goal_set.goals, searchsortedfirst(goal_set.goals, tf_guess), searchsortedlast(goal_set.goals, tf_guess)))
     x_goal[goal.ind_coordinates] = center(goal.params)
   end
+  	N = TOP.N
 	ShootingProblem(TOP.PD, TOP.WS, SCPS.dual, TOP.N, SCPS.traj.Tf, SCPS.traj.Tf/(N-1), x_goal)
 end
 
